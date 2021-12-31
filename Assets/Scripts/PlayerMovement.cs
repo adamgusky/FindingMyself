@@ -55,7 +55,13 @@ public class PlayerMovement : MonoBehaviour
             FindObjectOfType<GameSession>().ResetGameSession();
         }
         if (isAlive)  {
-            
+            if (myFeetCollider.IsTouchingLayers(LayerMask.GetMask("Ground"))) {
+                myAnimator.SetBool("IsJumping", false);
+            } else {
+                bool playerHasVerticalSpeed = Mathf.Abs(myRigidBody.velocity.y) > Mathf.Epsilon;
+                myAnimator.SetBool("IsJumping", playerHasVerticalSpeed);
+            }
+
             if (!isGrounded && coyoteTimeCounter > 0f) {
                 coyoteTimeCounter -= Time.deltaTime;
                 if (coyoteTimeCounter <= 0)
@@ -64,7 +70,6 @@ public class PlayerMovement : MonoBehaviour
                 }
             } 
             if (bufferTimer > 0) {
-                Debug.Log("decrement buffer timer");
                 bufferTimer -= Time.deltaTime;
             } else if (bufferTimer <= 0) {
                 jumpBuffered = false;
@@ -92,23 +97,22 @@ public class PlayerMovement : MonoBehaviour
                     bufferTimer = bufferTime;
                 }
             }
-            FlipSprite();
             Die(); 
         }
 
     }
 
     private void FixedUpdate() {
-        if (isAlive)  { 
+        if (isAlive)  {
             GroundCheck();
             Run();
+            FlipSprite();
             ClimbLadder();
         }
     }
 
     void Jump()
     {
-        Debug.Log("Jump");
         // if we are on our first jump, we use jump power, otherwise, double jump power
         float currentJumpPower = availableJumps == totalJumps ? jumpPower : dubJumpPower;
         //On double jumps, decrement jump here
@@ -122,7 +126,6 @@ public class PlayerMovement : MonoBehaviour
         isGrounded = false;
         Collider2D[] colliders =  Physics2D.OverlapCircleAll(groundCheck.position, groundCheckRadius, groundLayer);
         if (colliders.Length > 0) {
-            Debug.Log("Colliders detected");
             isGrounded = true;
             if (!wasGrounded) {
                 wasGrounded = true;
@@ -131,7 +134,6 @@ public class PlayerMovement : MonoBehaviour
                 coyoteTimeCounter = coyoteTime;
             }
         } else {
-            Debug.Log("No colliders detected");
             if (wasGrounded)
             {
             }
@@ -144,7 +146,12 @@ public class PlayerMovement : MonoBehaviour
         myRigidBody.velocity = playerVelocity;
         horizontalValue = Input.GetAxis("Horizontal");
         bool playerHasHorizontalSpeed = Mathf.Abs(myRigidBody.velocity.x) > Mathf.Epsilon;
-        myAnimator.SetBool("IsBouncing", playerHasHorizontalSpeed);
+        // bool playerHasVerticalSpeed = Mathf.Abs(myRigidBody.velocity.y) > Mathf.Epsilon;
+        // if (playerHasVerticalSpeed) {
+        //     myAnimator.SetBool("IsBouncing", false);
+        // } else {
+            myAnimator.SetBool("IsBouncing", playerHasHorizontalSpeed);
+        // }
     }
 
     void FlipSprite() {
@@ -160,7 +167,7 @@ public class PlayerMovement : MonoBehaviour
         }
         if (!myFeetCollider.IsTouchingLayers(LayerMask.GetMask("Climbing"))) {
             myRigidBody.gravityScale = gravityScaleAtStart;
-            myAnimator.SetBool("isClimbing", false);
+            myAnimator.SetBool("IsClimbing", false);
             return;
         }
 
