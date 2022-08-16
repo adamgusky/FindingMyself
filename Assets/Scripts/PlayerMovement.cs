@@ -55,13 +55,6 @@ public class PlayerMovement : MonoBehaviour
             FindObjectOfType<GameSession>().ResetGameSession();
         }
         if (isAlive)  {
-            if (myFeetCollider.IsTouchingLayers(LayerMask.GetMask("Ground"))) {
-                myAnimator.SetBool("IsJumping", false);
-            } else {
-                bool playerHasVerticalSpeed = Mathf.Abs(myRigidBody.velocity.y) > Mathf.Epsilon;
-                myAnimator.SetBool("IsJumping", playerHasVerticalSpeed);
-            }
-
             if (!isGrounded && coyoteTimeCounter > 0f) {
                 coyoteTimeCounter -= Time.deltaTime;
                 if (coyoteTimeCounter <= 0)
@@ -126,6 +119,7 @@ public class PlayerMovement : MonoBehaviour
         isGrounded = false;
         Collider2D[] colliders =  Physics2D.OverlapCircleAll(groundCheck.position, groundCheckRadius, groundLayer);
         if (colliders.Length > 0) {
+            myAnimator.SetBool("IsJumping", false);
             isGrounded = true;
             if (!wasGrounded) {
                 wasGrounded = true;
@@ -134,6 +128,8 @@ public class PlayerMovement : MonoBehaviour
                 coyoteTimeCounter = coyoteTime;
             }
         } else {
+            myAnimator.SetBool("IsJumping", true);
+            myAnimator.SetBool("IsBouncing", false);
             if (wasGrounded)
             {
             }
@@ -146,12 +142,8 @@ public class PlayerMovement : MonoBehaviour
         myRigidBody.velocity = playerVelocity;
         horizontalValue = Input.GetAxis("Horizontal");
         bool playerHasHorizontalSpeed = Mathf.Abs(myRigidBody.velocity.x) > Mathf.Epsilon;
-        // bool playerHasVerticalSpeed = Mathf.Abs(myRigidBody.velocity.y) > Mathf.Epsilon;
-        // if (playerHasVerticalSpeed) {
-        //     myAnimator.SetBool("IsBouncing", false);
-        // } else {
-            myAnimator.SetBool("IsBouncing", playerHasHorizontalSpeed);
-        // }
+
+        myAnimator.SetBool("IsBouncing", playerHasHorizontalSpeed && isGrounded);
     }
 
     void FlipSprite() {
